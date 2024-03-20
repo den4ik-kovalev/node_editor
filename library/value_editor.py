@@ -45,12 +45,28 @@ class IntInput(ValueEditor):
             self._tag = dpg.add_input_int(**kwargs)
 
     @property
-    def value(self) -> Optional[int]:
+    def value(self) -> int:
         return dpg.get_value(self._tag)
 
     @value.setter
-    def value(self, value: Optional[int]):
+    def value(self, value: int):
         dpg.set_value(self._tag, value)
+
+
+class PositiveIntInput(ValueEditor):
+
+    def __init__(self, **kwargs) -> None:
+        kwargs["default_value"] = kwargs.get("default_value") or 0
+        with dpg.stage() as self._stage:
+            self._tag = dpg.add_input_int(**kwargs)
+
+    @property
+    def value(self) -> Optional[int]:
+        return dpg.get_value(self._tag) or None
+
+    @value.setter
+    def value(self, value: Optional[int]):
+        dpg.set_value(self._tag, value or 0)
 
 
 class Combobox(ValueEditor):
@@ -92,7 +108,51 @@ class Combobox(ValueEditor):
 
 class StrCombobox(Combobox):
 
-    def _value_from_str(self, value_str: str) -> Optional[Any]:
+    def _value_from_str(self, value_str: str) -> Optional[str]:
         if value_str == "None":
             return None
         return value_str
+
+
+class FloatCombobox(Combobox):
+
+    def _value_from_str(self, value_str: str) -> Optional[float]:
+        if value_str == "None":
+            return None
+        return float(value_str)
+
+
+class EnumCombobox(Combobox):
+
+    def __init__(self, enum_cls: EnumMeta, **kwargs) -> None:
+        self._enum_cls = enum_cls
+        kwargs.pop("items", None)
+        items = list(enum_cls)
+        super(EnumCombobox, self).__init__(items, **kwargs)
+
+    def _value_to_str(self, value: Optional[Enum]) -> str:
+        if value is None:
+            return "None"
+        return value.value
+
+    def _value_from_str(self, value_str: str) -> Optional[Enum]:
+        if value_str == "None":
+            return None
+        enum_name = value_str.rpartition(".")[-1]
+        return self._enum_cls(enum_name)
+
+
+class Checkbox(ValueEditor):
+
+    def __init__(self, **kwargs) -> None:
+        kwargs["default_value"] = kwargs.get("default_value") or False
+        with dpg.stage() as self._stage:
+            self._tag = dpg.add_checkbox(**kwargs)
+
+    @property
+    def value(self) -> bool:
+        return dpg.get_value(self._tag)
+
+    @value.setter
+    def value(self, val: Optional[bool]):
+        dpg.set_value(self._tag, val)

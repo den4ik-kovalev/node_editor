@@ -186,7 +186,8 @@ class Node:
             raise ValueError("input not in self._inputs")
         if input not in self.busy_inputs:
             return None
-        return [p for p in self.parents if input in p.outputs][0]
+        link = [l for l in self.input_links if l.input is input][0]
+        return link.output.node
 
     def copy(self) -> Node:
         """ Копия, которая используется при восстановлении состояния NodeEditor """
@@ -200,7 +201,7 @@ class Node:
             outputs_count=len(self._outputs)
         )
 
-    def paint(self, r: int, g: int, b: int):
+    def paint(self, r: int, g: int, b: int) -> None:
         with dpg.theme() as theme:
             with dpg.theme_component(dpg.mvNode):
                 dpg.add_theme_color(dpg.mvNodeCol_TitleBar, (r, g, b), category=dpg.mvThemeCat_Nodes)
